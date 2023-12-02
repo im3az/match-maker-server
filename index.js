@@ -24,6 +24,65 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const allBiodataCollection = client
+      .db("matchMaker")
+      .collection("allBiodata");
+
+    // biodata related api
+    app.put("/editBiodata", async (req, res) => {
+      const biodata = req.body;
+
+      const existingBiodata = await allBiodataCollection.findOne({
+        email: biodata.email,
+      });
+
+      if (existingBiodata) {
+        biodata.biodataId = existingBiodata.biodataId;
+      } else {
+        const lastBiodata = await allBiodataCollection
+          .find()
+          .sort({ biodataId: -1 })
+          .limit(1)
+          .toArray();
+
+        biodata.biodataId =
+          lastBiodata.length === 0 ? 1 : lastBiodata[0].biodataId + 1;
+      }
+
+      const filter = { email: biodata.email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          age: biodata.age,
+          dateOfBirth: biodata.dateOfBirth,
+          email: biodata.email,
+          fathersName: biodata.fathersName,
+          gender: biodata.gender,
+          height: biodata.height,
+          image: biodata.image,
+          mobileNumber: biodata.mobileNumber,
+          mothersName: biodata.mothersName,
+          name: biodata.name,
+          occupation: biodata.occupation,
+          partnerAge: biodata.partnerAge,
+          partnerHeight: biodata.partnerHeight,
+          partnerWeight: biodata.partnerWeight,
+          permanentDivision: biodata.permanentDivision,
+          presentDivision: biodata.presentDivision,
+          religion: biodata.religion,
+          weight: biodata.weight,
+          biodataId: biodata.biodataId,
+        },
+      };
+      const result = await allBiodataCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
@@ -31,7 +90,7 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
