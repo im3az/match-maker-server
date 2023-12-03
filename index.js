@@ -28,6 +28,21 @@ async function run() {
     const allBiodataCollection = client
       .db("matchMaker")
       .collection("allBiodata");
+    const userCollection = client.db("matchMaker").collection("users");
+
+    // user related api
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
 
     // biodata related api
     app.put("/editBiodata", async (req, res) => {
@@ -54,7 +69,7 @@ async function run() {
       const options = { upsert: true };
       const updateDoc = {
         $set: {
-          age: biodata.age,
+          age: parseInt(biodata.age),
           dateOfBirth: biodata.dateOfBirth,
           email: biodata.email,
           fathersName: biodata.fathersName,
@@ -65,7 +80,7 @@ async function run() {
           mothersName: biodata.mothersName,
           name: biodata.name,
           occupation: biodata.occupation,
-          partnerAge: biodata.partnerAge,
+          partnerAge: parseInt(biodata.partnerAge),
           partnerHeight: biodata.partnerHeight,
           partnerWeight: biodata.partnerWeight,
           permanentDivision: biodata.permanentDivision,
@@ -85,6 +100,13 @@ async function run() {
 
     app.get("/allBiodata", async (req, res) => {
       const result = await allBiodataCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/userBiodata", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await allBiodataCollection.find(query).toArray();
       res.send(result);
     });
 
