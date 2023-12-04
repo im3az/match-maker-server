@@ -279,6 +279,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/suggestions", async (req, res) => {
+      const gender = req.query.gender;
+      const query = { gender: gender };
+      const result = await allBiodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // reviews api
     app.get("/reviews", async (req, res) => {
       const result = await reviewsCollection.find().toArray();
