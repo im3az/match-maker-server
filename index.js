@@ -125,9 +125,29 @@ async function run() {
 
     // premium related api
 
+    app.get("/premiumCollection", async (req, res) => {
+      const query = { role: "premium" };
+      const result = await premiumRequestsCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.get("/premiumRequests", verifyToken, verifyAdmin, async (req, res) => {
       const result = await premiumRequestsCollection.find().toArray();
       res.send(result);
+    });
+
+    app.get("/users/premium/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      const query = { email: email };
+      const user = await premiumRequestsCollection.findOne(query);
+      let premium = false;
+      if (user) {
+        premium = user?.role === "premium";
+      }
+      res.send({ premium });
     });
 
     app.post("/premiumRequest", async (req, res) => {
@@ -158,6 +178,24 @@ async function run() {
           filter,
           updateDoc
         );
+        res.send(result);
+      }
+    );
+
+    app.patch(
+      "/biodata/premium/:email",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.params.email;
+        const filter = { email: email };
+        const updateDoc = {
+          $set: {
+            status: "premium",
+          },
+        };
+
+        const result = await allBiodataCollection.updateOne(filter, updateDoc);
         res.send(result);
       }
     );
@@ -224,6 +262,12 @@ async function run() {
     app.get("/userBiodata", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
+      const result = await allBiodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/premiumBiodata", async (req, res) => {
+      const query = { status: "premium" };
       const result = await allBiodataCollection.find(query).toArray();
       res.send(result);
     });
