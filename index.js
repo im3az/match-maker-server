@@ -105,18 +105,6 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/premiumRequest", async (req, res) => {
-      const user = req.body;
-
-      const query = { email: user.email };
-      const existingUser = await premiumRequestsCollection.findOne(query);
-      if (existingUser) {
-        return res.send({ message: "User already exists", insertedId: null });
-      }
-      const result = await premiumRequestsCollection.insertOne(user);
-      res.send(result);
-    });
-
     app.patch(
       "/users/admin/:id",
       verifyToken,
@@ -131,6 +119,45 @@ async function run() {
         };
 
         const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
+
+    // premium related api
+
+    app.get("/premiumRequests", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await premiumRequestsCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/premiumRequest", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existingUser = await premiumRequestsCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+      const result = await premiumRequestsCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.patch(
+      "/users/premium/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            role: "premium",
+          },
+        };
+
+        const result = await premiumRequestsCollection.updateOne(
+          filter,
+          updateDoc
+        );
         res.send(result);
       }
     );
