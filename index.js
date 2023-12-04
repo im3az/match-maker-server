@@ -272,6 +272,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/biodataDetails/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await allBiodataCollection.findOne(query);
+      res.send(result);
+    });
+
     // reviews api
     app.get("/reviews", async (req, res) => {
       const result = await reviewsCollection.find().toArray();
