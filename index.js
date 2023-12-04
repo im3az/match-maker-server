@@ -30,6 +30,10 @@ async function run() {
       .db("matchMaker")
       .collection("allBiodata");
     const userCollection = client.db("matchMaker").collection("users");
+    const reviewsCollection = client.db("matchMaker").collection("reviews");
+    const premiumRequestsCollection = client
+      .db("matchMaker")
+      .collection("premiumRequest");
 
     // jwt related api
     app.post("/jwt", async (req, res) => {
@@ -42,7 +46,7 @@ async function run() {
 
     // middlewares
     const verifyToken = (req, res, next) => {
-      console.log("Inside verify token", req.headers.authorization);
+      // console.log("Inside verify token", req.headers.authorization);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "Unauthorized access" });
       }
@@ -98,6 +102,18 @@ async function run() {
         return res.send({ message: "User already exists", insertedId: null });
       }
       const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.post("/premiumRequest", async (req, res) => {
+      const user = req.body;
+
+      const query = { email: user.email };
+      const existingUser = await premiumRequestsCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+      const result = await premiumRequestsCollection.insertOne(user);
       res.send(result);
     });
 
@@ -182,6 +198,12 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const result = await allBiodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // reviews api
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
       res.send(result);
     });
 
